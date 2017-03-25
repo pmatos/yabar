@@ -146,7 +146,9 @@ Each bar can have its font, position (currently only top and bottom), background
 		command-button4: "xbacklight -inc 1";
 		command-button5: "xbacklight -dec 1";
 
+* Pango fix: When using some symbolic fonts, there can be occasional issues where space characters become unknown glyphs. This fix makes Pango use fallbacks properly (NOTE: the regular font should be specified first, then the symbolic font as shown in the Font section). Example:
 
+		fix-pango: true;
 
 ### Block-specific options
 
