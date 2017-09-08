@@ -526,17 +526,44 @@ void ya_int_battery(ya_block_t *blk) {
 	ya_setup_prefix_suffix(blk, &prflen, &suflen, &startstr);
 	uint8_t space = blk->internal->spacing ? 3 : 0;
 	char cpath[128], spath[128];
-	snprintf(cpath, 128, "/sys/class/power_supply/%s/capacity", blk->internal->option[0]);
-	snprintf(spath, 128, "/sys/class/power_supply/%s/status", blk->internal->option[0]);
+
+	/* Search for a '/' in internal option, the format BAT0/AC would mean that AC connection
+	  needs to be checked in /sys/class/power_supply/AC/online */
+	char *batt_dev = blk->internal->option[0];
+	char *ac_dev = batt_dev;
+
+	/* Looping ac_dev until we find separator */
+	while(*ac_dev && *ac_dev != '/')
+		ac_dev++;
+	if (*ac_dev == '/') {
+		*ac_dev = '\0';
+		ac_dev++;
+	}
+	
+	snprintf(cpath, 128, "/sys/class/power_supply/%s/capacity", batt_dev);
+
+	if(*ac_dev)
+		snprintf(spath, 128, "/sys/class/power_supply/%s/online", ac_dev);
+	else
+		snprintf(spath, 128, "/sys/class/power_supply/%s/status", batt_dev);
 	if(blk->internal->option[1]) {
 		sscanf(blk->internal->option[1], "%s %s %s %s %s", bat_25str, bat_50str, bat_75str, bat_100str, bat_chargestr);
 	}
 
 	while(1) {
+		fprintf(stderr, "%s", cpath);
 		if(ya_fscanf(cpath, blk, "%d", &bat) == 0)
 			ya_block_error(blk, "Getting values from %s failed", cpath);
+		fprintf(stderr, "%d", bat);
+		
+
+		bool charging = false;
+		fprintf(stderr, "%s", spath);
 		if(ya_fscanf(spath, blk, "%c", &stat) == 0)
 			ya_block_error(blk, "Getting values from %s failed", cpath);
+		fprintf(stderr, "%c", stat);
+		if((*ac_dev && stat == '1') || stat == 'C')
+			charging = true;
 
 		if(bat <= 25)
 			strcpy(startstr, bat_25str);
@@ -549,7 +576,7 @@ void ya_int_battery(ya_block_t *blk) {
 			if(bat > 100)
 				bat = 100;
 		}
-		if(stat == 'C' && blk->internal->option[1])
+		if(charging && blk->internal->option[1])
 			strcat(strcat(startstr, " "), bat_chargestr);
 		sprintf(startstr+strlen(startstr), "%*d", space, bat);
 		if(suflen)
