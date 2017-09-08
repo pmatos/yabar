@@ -327,6 +327,11 @@ internal-option1: "BAT0";
 internal-option2: "        "; # icons to indicate quarter, half, three-quarters, full and charging state
 internal-suffix: "%";
 ----
+However, some laptops have AC connection information in '/sys/class/power_supply/ACNAME/online' (where ACNAME might be 'AC'). For this reason, it's possible to write:
+----
+internal-option1: "BAT0/AC";
+----
+Using this format yabar will read capacity from '/sys/class/power_supply/BAT0/capacity' and AC connection information from '/sys/class/power_supply/AC/status'.
 
 * *YABAR_VOLUME* - *Volume*: Uses ALSA to display sound volume in percentage. Example:
 ----
