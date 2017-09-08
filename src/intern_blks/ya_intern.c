@@ -551,17 +551,13 @@ void ya_int_battery(ya_block_t *blk) {
 	}
 
 	while(1) {
-		fprintf(stderr, "%s", cpath);
 		if(ya_fscanf(cpath, blk, "%d", &bat) == 0)
 			ya_block_error(blk, "Getting values from %s failed", cpath);
-		fprintf(stderr, "%d", bat);
 		
 
 		bool charging = false;
-		fprintf(stderr, "%s", spath);
 		if(ya_fscanf(spath, blk, "%c", &stat) == 0)
 			ya_block_error(blk, "Getting values from %s failed", cpath);
-		fprintf(stderr, "%c", stat);
 		if((*ac_dev && stat == '1') || stat == 'C')
 			charging = true;
 
